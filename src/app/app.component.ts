@@ -1,56 +1,67 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { delay } from 'rxjs';
-export interface Todo {
-  completed: boolean;
-  title: string;
-  id?: number;
-}
+import { Todo, TodosService } from './todos.service';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  constructor(private http: HttpClient) {}
-
   todos: Todo[] = [];
 
   todoTitle = '';
 
   loading = false;
 
+  errors = '';
+
+  constructor(private todosService: TodosService) {}
+
   ngOnInit(): void {
     this.fetchTodo();
   }
 
+  completeTodo(id: any) {
+    this.todosService.completeTodo(id).subscribe((todo) => {
+      const foundTodo = this.todos.find((t) => t.id === todo.id);
+      if (foundTodo) {
+        foundTodo.completed = true;
+      }
+    });
+  }
+
   fetchTodo() {
     this.loading = true;
-    this.http
-      .get<Todo[]>('https://jsonplaceholder.typicode.com/todos?_limit=3')
-      .pipe(delay(800))
-      .subscribe((todos) => {
+    this.todosService.fetchTodos().subscribe(
+      (todos) => {
         this.todos = todos;
         this.loading = false;
-      });
+      },
+      (error) => {
+        this.errors = error.message;
+      },
+      () => {}
+    );
   }
-  removeTodo(id: number) {
-    this.http
-      .delete(`https://jsonplaceholder.typicode.com/todos/${id}`)
-      .subscribe((res) => {
-        console.log(res);
-      });
+
+  removeTodo(id: any) {
+    this.todosService.removeTodos(id).subscribe((res) => {
+      this.todos = this.todos.filter((t) => t.id !== id);
+    });
   }
+
   addTodo() {
     if (!this.todoTitle.trim()) {
       return;
     }
-    const newTodo: Todo = {
-      title: this.todoTitle,
-      completed: false,
-    };
-    this.http
-      .post<Todo>('https://jsonplaceholder.typicode.com/todos', newTodo)
+
+    this.todosService
+      .addTodo({
+        title: this.todoTitle,
+        completed: false,
+      })
       .subscribe((todo) => {
         console.log(todo);
         this.todos.push(todo);

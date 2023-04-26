@@ -8,20 +8,34 @@
   </div>
 
   <hr />
-  <div *ngIf="!loading; else loadingBlock">
-    <div class="card" *ngFor="let todo of todos">
-      <p>
-        <span [class.completed]="todo.completed">{{
-          todo.title | titlecase
-        }}</span>
-        <span>
-          <button class="btn btn-danger" (click)="removeTodo(todo.id)">
-            Удалить
-          </button>
-          <button class="btn" [disabled]="todo.completed">Завершить</button>
-        </span>
-      </p>
+
+  <p *ngIf="errors; else todoBlock" class="error">{{ errors }}</p>
+
+  <ng-template #todoBlock>
+    <div *ngIf="!loading; else loadingBlock">
+      <div *ngIf="this.todos.length; else noTodos">
+        <div class="card" *ngFor="let todo of todos">
+          <p>
+            <span [class.completed]="todo.completed">{{
+              todo.title | titlecase
+            }}</span>
+            <span>
+              <button class="btn btn-danger" (click)="removeTodo(todo.id)">
+                Удалить
+              </button>
+              <button
+                class="btn"
+                [disabled]="todo.completed"
+                (click)="completeTodo(todo.id)"
+              >
+                Завершить
+              </button>
+            </span>
+          </p>
+        </div>
+      </div>
+      <ng-template #noTodos> Нет данных</ng-template>
     </div>
-  </div>
-  <ng-template #loadingBlock>Loading...</ng-template>
+    <ng-template #loadingBlock>Loading...</ng-template>
+  </ng-template>
 </div>
