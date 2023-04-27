@@ -1,6 +1,11 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEventType,
+  HttpHeaders,
+  HttpParams,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, delay } from 'rxjs';
+import { Observable, delay, map, tap } from 'rxjs';
 
 export interface Todo {
   completed: boolean;
@@ -34,13 +39,27 @@ export class TodosService {
   fetchTodos(): Observable<Todo[]> {
     return this.http
       .get<Todo[]>('https://jsonplaceholder.typicode.com/todos?', {
-        params: new HttpParams().set('_limit', '7'),
+        params: new HttpParams().set('_limit', '7'), //добавляем query-параметры ,
+        observe: 'body',
       })
       .pipe(delay(800));
   }
 
   removeTodos(id: number) {
-    return this.http.delete(`https://jsonplaceholder.typicode.com/todos/${id}`);
+    return this.http
+      .delete(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+        observe: 'events',
+      })
+      .pipe(
+        tap((event) => {
+          if (event.type === HttpEventType.Sent) {
+            console.log('sent', event);
+          }
+          if (event.type === HttpEventType.Response) {
+            console.log('response', event);
+          }
+        })
+      );
   }
 
   completeTodo(id: any): Observable<Todo> {
